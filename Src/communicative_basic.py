@@ -12,11 +12,7 @@ def communicative_basic(train_file, test_file, submission_file, num_predictions)
     graph = {}
     graph = utilities.read_graph(train_file)
     print " done!"
-<<<<<<< HEAD
     print ">> the graph contains %d ndoes" % len(graph)
-=======
-    print ">>> the graph contains %d ndoes" % len(graph)
->>>>>>> 65f81ff820e8ca74671aabd90de8bc44113341a3
     
     print ">>> building the edge set ...",
     edgeSet = set()
@@ -34,7 +30,6 @@ def communicative_basic(train_file, test_file, submission_file, num_predictions)
     
     testResult = {}
     testNodeList = utilities.read_nodes_list(test_file)
-<<<<<<< HEAD
     testNodeSet = set(testNodeList)
     print ">> %d test Nodes read." % len(testNodeList)
     print ">>> making the missing edge dictionary for test nodes ...",
@@ -48,21 +43,6 @@ def communicative_basic(train_file, test_file, submission_file, num_predictions)
     
     print ">>> outputing the final result ...",
     utilities.write_submission_file(submission_file, testNodeList, [testResult[testNode] for testNode in testNodeList])
-=======
-    print ">>> making the missing edge dictionary for test nodes ...",
-    count = 0;
-    for edge in missingEdgeSet:
-        if (edge[0] not in testResult):
-            testResult[edge[0]] = []
-        testResult[edge[0]].append(edge[1])
-        count+=1
-        if (count % 1000 == 0):
-            print ">> %r%% = %d / %d" % (count/len(missingEdgeSet)*100, count, len(missingEdgeSet))
-    print " done!"
-    
-    print ">>> outputing the final result ...",
-    utilities.write_submission_file(submission_file, testNodeList, [testResult[testNode] for testNode in testResult.keys()])
->>>>>>> 65f81ff820e8ca74671aabd90de8bc44113341a3
     print " done!"
     
 if __name__=="__main__":

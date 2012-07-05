@@ -57,7 +57,7 @@ def communicative_basic(train_file, test_file, submission_file, num_predictions)
     print " done!"
     
     print ">>> outputing the final result ...",
-    utilities.write_submission_file(submission_file, testNodeList, [testResult[testNode] for testNode in testNodeSet])
+    utilities.write_submission_file(submission_file, testNodeList, [testResult[testNode] for testNode in testNodeList])
     print " done!"
     
 if __name__=="__main__":

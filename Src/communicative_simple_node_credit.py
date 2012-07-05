@@ -1,6 +1,6 @@
 import utilities
 '''
-output a basic communicative edge adding result
+output a communicative edge adding w/ simple node credit result
 '''
 
 def communicative_basic(train_file, test_file, submission_file, num_predictions):

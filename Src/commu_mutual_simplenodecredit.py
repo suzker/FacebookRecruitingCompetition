@@ -4,6 +4,18 @@ output a commutual + mutual following w/ simple node credit result
 @author: Zhiliang SU (suzker) zsu2 [at] buffalo [dot] edu
 '''
 
+def get_node_credit(edgeSet, nodeSet):
+    '''
+    compute the node credit according to the edgeSet 
+    (siplified version, number of followers)
+    '''
+    nodeCredit = get_empty_dict(nodeSet, 'zero')
+    print ">>> computing node credits ...",
+    for edge in edgeSet:
+        nodeCredit[edge[1]]+=1
+    print " done!"
+    return nodeCredit
+
 def get_edge_set(graph):
     '''
     utility to get the edge set out of a graph
@@ -20,23 +32,20 @@ def get_empty_dict(nodeSet, type):
     '''
     returns an empty dictionary with full key sets from a node set
     '''
-    print ">>> generating an empty dict ...",
     emptyDict = {}
     for node in nodeSet:
         if type == 'zero':
             emptyDict[node] = 0
         else:
             emptyDict[node] = []
-            
     return emptyDict
-    print " done!"
 
 def get_reverse_relationship_graph(edgeSet, nodeSetFull):
     '''
     utility to get a reverse relationship (e.g, from following to follower) graph from a set of edges
     '''
     print ">>> building the reversed relationships graph ..."
-    reversedGraph = get_empty_dict(nodeSetFull)
+    reversedGraph = get_empty_dict(nodeSetFull, 'list')
     for edge in edgeSet:
         reversedGraph[edge[1]].append(edge[0])
     print " done!"
@@ -51,18 +60,16 @@ def get_commu_missing_edge(edgeSet, testNodeList):
     for edge in edgeSet:
         if (edge[1], edge[0]) not in edgeSet:
             missingEdgeSet.add((edge[1], edge[0]))
-    print " done!"
     
     testNodeSet = set(testNodeList)
     missingEdgeDict = get_empty_dict(testNodeList, 'list')
-    print ">>> finding missing edges for each test node ..."
     for edge in missingEdgeSet:
-        if (edge[0] in testNodeList):
+        if (edge[0] in testNodeSet):
             missingEdgeDict[edge[0]].append(edge[1])
     print " done!"
     return missingEdgeDict
     
-def get_mutual_missing_edge_set(followingGraph, testNodeList, edgeSet, nodeSetFull, minMutualFrd):
+def get_mutual_missing_edge(followingGraph, testNodeList, edgeSet, nodeSetFull, minMutualFrd):
     '''
     to get a missing edge set in which are friends who have the mutual followings
     '''
@@ -71,7 +78,7 @@ def get_mutual_missing_edge_set(followingGraph, testNodeList, edgeSet, nodeSetFu
         '''
         to get a count dict for all mutual followings list
         '''
-        exclusiveSet = set(mutual_lsit)
+        exclusiveSet = set(mutual_list)
         mutualCount = get_empty_dict(exclusiveSet, 'zero')
         for node in mutual_list:
             mutualCount[node] += 1
@@ -101,7 +108,7 @@ def get_mutual_missing_edge_set(followingGraph, testNodeList, edgeSet, nodeSetFu
     missingEdgeDict = get_empty_dict(testNodeList, 'list')
     # generate missing edge dict
     for node in testNodeList:
-        mutualCount = get_mutual_count(get_mutual_list(graph[node], followerGraph))
+        mutualCount = get_mutual_count(get_mutual_list(followingGraph[node], followerGraph))
         # reverse the dict :)
         mutualCountReverse = reverse_dict(mutualCount)
         # sort keys
@@ -113,7 +120,9 @@ def get_mutual_missing_edge_set(followingGraph, testNodeList, edgeSet, nodeSetFu
                 sortedNodeList.append(mutualCountReverse[count])
         # map to test node
         missingEdgeDict[node] = sortedNodeList
-
+    print " done!"
+    return missingEdgeDict
+    
 def main_entrance(train_data_file, test_data_file, submit_data_file):
     '''
     the main entrance of the program
@@ -125,18 +134,41 @@ def main_entrance(train_data_file, test_data_file, submit_data_file):
     print ">>> reading the graph from file ...",
     following_graph = utilities.read_graph(train_data_file)
     print " done!"
-    print ">> the graph contains %d ndoes" % len(graph)
+    print ">> the graph contains %d ndoes" % len(following_graph)
     
     print ">>> reading test nodes ...",
     testNodeList = utilities.read_nodes_list(test_data_file)
     print " done!"
     
     edgeSet = get_edge_set(following_graph)
+    nodeCredit = get_node_credit(edgeSet, following_graph.keys())
     commu_missingEdgeDict = get_commu_missing_edge(edgeSet, testNodeList)
-    mutual_missingEdgeDict = get_mutual_missing_edge(graph, testNodeList, edgeSet, following_graph.keys(), minMutualFrd)
+    mutual_missingEdgeDict = get_mutual_missing_edge(following_graph, testNodeList, edgeSet, following_graph.keys(), minMutualFrd)
+    
+    # union two edge dicts
+    finalPrediction = {}
+    for node in testNodeList:
+        finalPrediction[node] = list(set(mutual_missingEdgeDict[node]) | set(commu_missingEdgeDict[node]))
+    
+    # customized comparator for final prediction
+    def compareCredit(key):
+        '''
+        utility function to comapre the two credits given the key
+        '''
+        return nodeCredit[key]
+    
+    # rank the predictions
+    print ">>> sorting the final results according to node credits ...",
+    for testNode in testNodeList:
+        finalPrediction[testNode].sort(key=compareCredit, reverse=True)
+    print " done!"
+    
+    # write prediction to file
+    print ">>> outputing the final result ...",
+    utilities.write_submission_file(submit_data_file, testNodeList, [finalPrediction[testNode] for testNode in testNodeList])
+    print " done!"
     
 if __name__=="__main__":
     main_entrance("../Data/train.csv",
                   "../Data/test.csv",
-                  "../Submissions/commutual_basic.csv",
-                  10)
+                  "../Submissions/commutual_mutual_simplenodecredit.csv")
